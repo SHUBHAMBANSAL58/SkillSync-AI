@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // GLOBAL SECURITY HELPERS & ACCESS CONTROL PRIMITIVES
+    // =========================================================================
+
+    // Checks if the incoming request is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Restricts user access strictly to the authenticated user's UID
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Ensures admin access for authorized personnel
+    // Validates custom claims, admin database collection, or verified platform admin email
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.token.role == 'admin' ||
+        (request.auth.token.email != null && (
+          request.auth.token.email == 'bansalshubham182@gmail.com' ||
+          request.auth.token.email.matches('.*@admin\\.skillsync\\.ai$')
+        )) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validates path variable string length and format
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // =========================================================================
+    // USER DATA ISOLATION (RESTRICTED TO USER UID & AUTHORIZED ADMINS)
+    // =========================================================================
+
+    // User Profile Document
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+
+      // Private User Resumes & ATS Documents
+      match /resumes/{resumeId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Private Job Applications & Stage Tracking
+      match /applications/{appId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Private Skill Assessment Submissions
+      match /assessments/{assessmentId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Private AI Interview Sessions & Transcripts
+      match /interviews/{interviewId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // User Portfolio Projects
+      match /projects/{projectId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // User 4-Agent Tasks
+      match /agentTasks/{taskId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // User Calendar & Timeline Events
+      match /calendarEvents/{eventId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // User Notifications
+      match /notifications/{notifId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Catch-all for any user subcollections
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // =========================================================================
+    // CURATED & PLATFORM COLLECTIONS
+    // =========================================================================
+
+    // Vetted Career & Placement Opportunities
+    match /opportunities/{opportunityId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Technical Assessments & Coding Challenges
+    match /challenges/{challengeId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Peer Learning Squads
+    match /peerGroups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (
+        resource.data.creatorId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Multi-Agent Shared Execution Workflows
+    match /agentWorkflows/{workflowId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Administrative Registry & Personnel Roles
+    match /admins/{adminId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Administrative System Configuration
+    match /admin/{adminDoc=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // Security & Compliance Audit Logs
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // Connection testing endpoint for boot verification
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

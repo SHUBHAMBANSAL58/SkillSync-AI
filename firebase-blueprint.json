@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile containing academic credentials, target roles, and career intelligence metrics.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "engineer", "admin"] },
+        "targetRole": { "type": "string" },
+        "cgpa": { "type": "number" },
+        "graduationYear": { "type": "integer" },
+        "degree": { "type": "string" },
+        "activeBacklogs": { "type": "integer" },
+        "readinessScore": { "type": "number" },
+        "streakDays": { "type": "integer" }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "Resume": {
+      "title": "Resume",
+      "description": "User resume version with extracted entities and calculated ATS scores.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "targetRole": { "type": "string" },
+        "atsScore": { "type": "number" },
+        "rawText": { "type": "string" }
+      },
+      "required": ["id", "title"]
+    },
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "Public curated internships and full-time engineering drives.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "company": { "type": "string" },
+        "role": { "type": "string" },
+        "stipendOrSalary": { "type": "string" },
+        "deadline": { "type": "string" }
+      },
+      "required": ["id", "company", "role"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User root document restricted to owner UID and authorized admins."
+    },
+    "/users/{userId}/resumes/{resumeId}": {
+      "schema": { "$ref": "#/entities/Resume" },
+      "description": "Private resume documents belonging to the user."
+    },
+    "/opportunities/{opportunityId}": {
+      "schema": { "$ref": "#/entities/Opportunity" },
+      "description": "Public vetted opportunities curated by admins."
+    }
+  }
+}

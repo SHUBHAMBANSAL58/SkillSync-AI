@@ -1,0 +1,6 @@
+{
+  "name": "SkillSync AI 4.0",
+  "description": "AI-Powered Career Intelligence, Skill Development & Job Readiness Ecosystem. Build Skills. Prove Your Value. Get Hired.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
