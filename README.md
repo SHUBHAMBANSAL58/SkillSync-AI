@@ -105,10 +105,7 @@ cd skillsync-ai
 # 2. Install dependencies
 npm install
 
-# 3. Configure environment variables in .env
-
-
-# 4. Start development server
+# 3. Start development server
 npm run dev
 ```
 
