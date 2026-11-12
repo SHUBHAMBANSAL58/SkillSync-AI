@@ -106,7 +106,7 @@ cd skillsync-ai
 npm install
 
 # 3. Configure environment variables in .env
-GEMINI_API_KEY="your-gemini-api-key"
+
 
 # 4. Start development server
 npm run dev
